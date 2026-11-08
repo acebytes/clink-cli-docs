@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-Build all documentation pages with `npm run build`. Inspect the generated site with `npm run preview`. Deploy to the configured Cloudflare Worker with `npm run deploy` from an authorized account.
+Build all documentation pages with `npm run build`. Inspect the generated site with `npm run preview`. The custom domain is declared in `wrangler.jsonc`. Deploy to the configured Cloudflare Worker with `npm run deploy` from an authorized account.
 
 Edit content in `src/pages`, shared navigation in `src/data/navigation.js` and the accessible copy control in `src/components/Code.astro`. Keep MCP tool arguments distinct from shell commands. Check examples against the corresponding public upstream release before updating the compatibility table.
 
