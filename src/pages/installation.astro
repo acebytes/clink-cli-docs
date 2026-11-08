@@ -1,0 +1,61 @@
+---
+import Docs from "../layouts/Docs.astro";
+import Code from "../components/Code.astro";
+---
+
+<Docs
+  title="Installation"
+  description="Install Clink once to get the command-line client and the MCP server. You can check the installation before connecting an agent."
+  toc={[
+    ["with-uv", "Install with uv"],
+    ["verify", "Verify the installation"],
+    ["requirements", "Compatibility"],
+  ]}
+>
+  <h2 id="with-uv">Install with uv</h2>
+  <p>
+    With{" "}
+    <a href="https://docs.astral.sh/uv/getting-started/installation/">
+      uv installed
+    </a>
+    , run the following command. It installs the published Python package into
+    an isolated environment.
+  </p>
+  <Code label="Terminal" code="uv tool install clink-cli" />
+  <p>
+    If your shell cannot find the new commands, follow uv’s printed PATH
+    instructions and start a new shell. If you installed the original v0.2.0
+    GitHub wheel with uv, remove its old distribution first with{" "}
+    <code>uv tool uninstall clink-mcp-server</code>.
+  </p>
+  <h2 id="verify">Verify the installation</h2>
+  <Code
+    label="Terminal"
+    code={"clink --help\nclink generation-capabilities --json"}
+  />
+  <p>
+    The second command reports supported generation schemas and agent families.
+    It reads local capability information without calling a model. The{" "}
+    <a href="/quick-start/#claude">Claude Code quick start</a> verifies the
+    separate MCP entry point.
+  </p>
+  <h2 id="requirements">Compatibility</h2>
+  <ul>
+    <li>Python 3.10 or newer. The project tests against Python 3.12.</li>
+    <li>
+      Process supervision targets POSIX systems. Recorded native admissions
+      cover exact macOS arm64 executables and launch recipes.
+    </li>
+    <li>
+      Sign in through the chosen native CLI before a model call. Native Windows
+      delegation is unavailable.
+    </li>
+  </ul>
+  <p>
+    For a wheel or source installation, follow the{" "}
+    <a href="https://github.com/acebytes/clink-cli#install-and-connect">
+      upstream installation guide
+    </a>
+    .
+  </p>
+</Docs>

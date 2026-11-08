@@ -1,0 +1,44 @@
+---
+const { label, code } = Astro.props;
+---
+
+<div class="code-card">
+  <div class="code-bar">
+    <span>{label}</span>
+    <button class="copy" type="button" hidden aria-label={"Copy " + label}>
+      <span aria-hidden="true">⧉</span> <span class="copy-label">Copy</span>
+    </button>
+  </div>
+  <pre tabindex="0"><code>{code.trim()}</code></pre>
+</div>
+<script>
+  for (const button of document.querySelectorAll<HTMLButtonElement>(
+    "button.copy",
+  )) {
+    const code = button.closest(".code-card")?.querySelector("code");
+    const label = button.querySelector(".copy-label");
+    if (!code || !label || !navigator.clipboard) continue;
+    button.hidden = false;
+    let reset: ReturnType<typeof setTimeout>;
+    button.addEventListener("click", async () => {
+      clearTimeout(reset);
+      const announcer = document.getElementById("copy-status");
+      try {
+        await navigator.clipboard.writeText(code.textContent || "");
+        label.textContent = "Copied";
+        if (announcer)
+          announcer.textContent =
+            button.getAttribute("aria-label") + " — copied to clipboard.";
+      } catch {
+        label.textContent = "Select to copy";
+        if (announcer)
+          announcer.textContent =
+            "Clipboard access was denied. Select the code and copy it manually.";
+      }
+      reset = setTimeout(() => {
+        label.textContent = "Copy";
+        if (announcer) announcer.textContent = "";
+      }, 2200);
+    });
+  }
+</script>

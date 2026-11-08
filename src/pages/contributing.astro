@@ -1,0 +1,56 @@
+---
+import Docs from "../layouts/Docs.astro";
+import Code from "../components/Code.astro";
+import { upstream, docsRepo } from "../data/navigation";
+---
+
+<Docs
+  title="Contributing"
+  description="Work from the public source, reproduce a problem with synthetic data, and run local checks before opening a change."
+  toc={[
+    ["checkout", "Set up a checkout"],
+    ["checks", "Run offline checks"],
+    ["report", "Report issues"],
+    ["license", "License and provenance"],
+  ]}
+>
+  <h2 id="checkout">Set up a checkout</h2>
+  <Code
+    label="Terminal"
+    code={
+      "git clone https://github.com/acebytes/clink-cli.git\ncd clink-cli\n./run-server.sh --setup\n.venv/bin/python -m pip install -r requirements-dev.txt"
+    }
+  />
+  <h2 id="checks">Run offline checks</h2>
+  <p>
+    The ordinary verification suite uses synthetic executables. These commands
+    run the offline test selection, check lint and formatting, and build the
+    distribution.
+  </p>
+  <Code
+    label="Terminal · Clink checkout"
+    code={
+      '.venv/bin/python -m pytest tests/ -v -m "not integration and not real_cli and not private_evidence"\n.venv/bin/python -m ruff check .\n.venv/bin/python -m black --check .\n.venv/bin/python -m isort --check-only .\n.venv/bin/python -m build'
+    }
+  />
+  <h2 id="report">Report issues</h2>
+  <p>
+    File product issues in the{" "}
+    <a href={upstream + "/issues"}>Clink issue tracker</a>. Include the
+    operation, versions and a minimal, sanitized reproduction. Use the{" "}
+    <a href={upstream + "/blob/main/SECURITY.md"}>
+      private reporting instructions
+    </a>{" "}
+    for vulnerabilities. Website fixes belong in the{" "}
+    <a href={docsRepo}>documentation repository</a>.
+  </p>
+  <h2 id="license">License and provenance</h2>
+  <p>
+    Clink derives from{" "}
+    <a href="https://github.com/BeehiveInnovations/pal-mcp-server">
+      PAL MCP Server
+    </a>
+    , formerly Zen MCP. Copyright 2025 Beehive Innovations. The project retains
+    the <a href={upstream + "/blob/main/LICENSE"}>Apache 2.0 license</a>.
+  </p>
+</Docs>

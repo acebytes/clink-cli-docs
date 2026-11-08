@@ -1,0 +1,178 @@
+---
+import Docs from "../layouts/Docs.astro";
+import { upstream } from "../data/navigation";
+const agents = [
+  ["Codex 0.166.0", "Admitted", "Disabled", "Explicit model, schema 2 or 3"],
+  [
+    "Claude Code 2.1.304",
+    "Unavailable",
+    "Admitted",
+    "Explicit full model ID, schema 2 or 3",
+  ],
+  ["Grok Build 1.0.70", "Unverified", "Admitted", "Native default, schema 3"],
+  ["Antigravity 1.4.12", "Unverified", "Admitted", "Unverified, refused"],
+  ["Gemini", "Unverified", "Unimplemented", "Unimplemented"],
+];
+---
+
+<Docs
+  title="Reference"
+  description="Look up the two entry points, operation-specific agent support, tool groups and configuration precedence."
+  toc={[
+    ["commands", "Commands"],
+    ["admissions", "Agent compatibility"],
+    ["tools", "MCP tools"],
+    ["config", "Configuration"],
+    ["results", "Results and permissions"],
+  ]}
+>
+  <h2 id="commands">Commands</h2>
+  <dl>
+    <dt>
+      <code>clink generation-capabilities --json</code>
+    </dt>
+    <dd>
+      Inspect generation schemas and family support locally. Add{" "}
+      <code>--cli NAME --executable /absolute/path</code> to inspect a specific
+      executable’s identity.
+    </dd>
+    <dt>
+      <code>clink allow PATH --cli NAME</code>
+    </dt>
+    <dd>
+      Approve an existing directory for the specified CLI. An explicit{" "}
+      <code>--yes</code> grants it non-interactively. Native agent trust is
+      managed separately.
+    </dd>
+    <dt>
+      <code>clink generate --request-json -</code>
+    </dt>
+    <dd>
+      Read one generation request from stdin and return one terminal JSON
+      result.
+    </dd>
+    <dt>
+      <code>clink-mcp-server --project PATH</code>
+    </dt>
+    <dd>Serve MCP tools over stdio for an explicitly bound workspace.</dd>
+  </dl>
+  <h2 id="admissions">Agent compatibility</h2>
+  <p>
+    The recorded checks cover exact macOS arm64 binaries, launch recipes and
+    parsers. A different build can be installed and signed in while still being
+    refused.{" "}
+    <a href={upstream + "/blob/main/docs/release-evidence.md"}>
+      Release evidence and limits
+    </a>
+    .
+  </p>
+  <div
+    class="table-scroll"
+    tabindex="0"
+    role="region"
+    aria-label="Agent compatibility table"
+  >
+    <table>
+      <thead>
+        <tr>
+          <th>Agent</th>
+          <th>Consultation</th>
+          <th>Native task</th>
+          <th>Generation</th>
+        </tr>
+      </thead>
+      <tbody>
+        {agents.map(([a, b, c, d]) => (
+          <tr>
+            <th scope="row">{a}</th>
+            <td>{b}</td>
+            <td>{c}</td>
+            <td>{d}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <h2 id="tools">MCP tools</h2>
+  <p>
+    All 18 tools are enabled by default. <code>DISABLED_TOOLS</code> can hide
+    optional tools. <code>version</code> and <code>listmodels</code> stay
+    available.
+  </p>
+  <ul>
+    <li>
+      <strong>Consultation and delegation.</strong> <code>chat</code> and{" "}
+      <code>clink</code>. The latter also accepts native task actions.
+    </li>
+    <li>
+      <strong>Investigation.</strong> <code>thinkdeep</code>,{" "}
+      <code>codereview</code>, <code>precommit</code>, <code>debug</code>,{" "}
+      <code>secaudit</code>, <code>analyze</code>, <code>refactor</code>,{" "}
+      <code>testgen</code>.
+    </li>
+    <li>
+      <strong>Consultations and search.</strong> <code>consensus</code> and{" "}
+      <code>apilookup</code>.
+    </li>
+    <li>
+      <strong>Local guidance.</strong> <code>planner</code>, <code>docgen</code>
+      , <code>tracer</code>, <code>challenge</code>.
+    </li>
+    <li>
+      <strong>Discovery.</strong> <code>listmodels</code> and{" "}
+      <code>version</code>.
+    </li>
+  </ul>
+  <h2 id="config">Configuration</h2>
+  <p>
+    Clink loads client manifests in the order below. A later definition replaces
+    the entire named client.
+  </p>
+  <ol>
+    <li>Bundled client defaults</li>
+    <li>
+      Legacy <code>~/.pal/cli_clients/</code>
+    </li>
+    <li>
+      User <code>~/.clink/cli_clients/</code>
+    </li>
+    <li>
+      Explicitly bound project <code>.clink/cli_clients/</code>
+    </li>
+    <li>
+      <code>CLI_CLIENTS_CONFIG_PATH</code>
+    </li>
+  </ol>
+  <p>
+    Generation loads operator configuration independently of the request’s
+    project path. See{" "}
+    <a href={upstream + "/blob/main/docs/cli-configuration.md"}>
+      CLI configuration
+    </a>{" "}
+    and{" "}
+    <a href={upstream + "/blob/main/docs/generation-native-setup.md"}>
+      generation setup
+    </a>
+    .
+  </p>
+  <h2 id="results">Results and permissions</h2>
+  <p>
+    An agent’s reported model can be unknown even when its requested model is
+    explicit. Completion confirms final response transport. Check the answer and
+    any file changes independently. Approved roots constrain project and context
+    selection. Native tools retain their configured permissions, and
+    cancellation cannot undo earlier changes.
+  </p>
+  <p>
+    Read the{" "}
+    <a href={upstream + "/blob/main/docs/generation-native-protocol.md"}>
+      schema 2 contract
+    </a>
+    ,{" "}
+    <a href={upstream + "/blob/main/docs/generation-native-families.md"}>
+      schema 3 contract
+    </a>{" "}
+    and <a href={upstream + "/blob/main/SECURITY.md"}>security policy</a> for
+    full details.
+  </p>
+</Docs>

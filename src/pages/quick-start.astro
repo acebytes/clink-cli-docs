@@ -1,0 +1,59 @@
+---
+import Docs from "../layouts/Docs.astro";
+import Code from "../components/Code.astro";
+---
+
+<Docs
+  title="Quick start"
+  description="Inspect the local generation capabilities, connect Claude Code, then verify the MCP connection without making a model call."
+  toc={[
+    ["inspect", "Inspect capabilities"],
+    ["claude", "Connect Claude Code"],
+    ["connection", "Check the connection"],
+  ]}
+>
+  <h2 id="inspect">Inspect capabilities</h2>
+  <p>
+    After <a href="/installation/">installation</a>, use discovery to see which
+    generation operations Clink recognizes. Admission is checked again when you
+    submit work.
+  </p>
+  <Code label="Terminal" code="clink generation-capabilities --json" />
+  <h2 id="claude">Connect Claude Code</h2>
+  <p>
+    In the project directory where you use Claude Code, register the server. The
+    local scope keeps this registration private to you in that project. The
+    project argument binds the workspace explicitly.
+  </p>
+  <Code
+    label="Terminal · project directory"
+    code={
+      'claude mcp add --scope local --transport stdio clink -- "$(uv tool dir --bin)/clink-mcp-server" --project "$PWD"\nclaude mcp get clink'
+    }
+  />
+  <h2 id="connection">Check the connection</h2>
+  <ol>
+    <li>
+      Look for <strong>Connected</strong> in the command output.
+    </li>
+    <li>
+      Open Claude Code in the same directory. Run <code>/mcp</code> and look for{" "}
+      <code>clink</code>.
+    </li>
+    <li>
+      Ask Claude to call Clink’s <code>version</code> tool and then{" "}
+      <code>listmodels</code>, passing an empty object to each. These local
+      checks need no native agent login.
+    </li>
+  </ol>
+  <Code label="MCP tool arguments · version or listmodels" code="{}" />
+  <p>
+    To make a real call, use a compatible, authenticated agent and follow the{" "}
+    <a href="/examples/">generation or consultation example</a>. Other MCP
+    clients can use the{" "}
+    <a href="https://github.com/acebytes/clink-cli#install-and-connect">
+      stdio registration example
+    </a>
+    .
+  </p>
+</Docs>

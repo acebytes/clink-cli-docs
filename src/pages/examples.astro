@@ -1,0 +1,110 @@
+---
+import Docs from "../layouts/Docs.astro";
+import Code from "../components/Code.astro";
+const generation = JSON.stringify(
+  {
+    schema_version: 3,
+    request_id: "66f96fc9-969d-4c0e-ab92-e355fa0e7588",
+    execution_mode: "native",
+    project_dir: "/absolute/path/to/your-project",
+    cli: "grok",
+    model_selection: { kind: "native_default" },
+    instructions:
+      "Rewrite the supplied text for clarity. Return only the revision.",
+    input: "Explain the tradeoffs of a cache for this application.",
+    timeout_seconds: 120,
+  },
+  null,
+  2,
+);
+const native = JSON.stringify(
+  {
+    action: "start",
+    cli_name: "claude",
+    project_dir: "/absolute/path/to/your-project",
+    prompt: "Inspect the test suite and report which checks cover the parser.",
+    request_key: "inspect-parser-tests-1",
+    timeout_seconds: 180,
+  },
+  null,
+  2,
+);
+---
+
+<Docs
+  title="Usage examples"
+  description="Generate text from the shell, ask for advice through MCP, or delegate a native task that you can poll."
+  toc={[
+    ["generate", "Generate from a script"],
+    ["consult", "Consult with Codex"],
+    ["task", "Start a native task"],
+  ]}
+>
+  <h2 id="generate">Generate from a script</h2>
+  <p>
+    This example uses a compatible, signed-in Grok Build installation and its
+    native model default. From an existing project folder, approve that
+    directory for Grok. The prompt defaults to No.
+  </p>
+  <Code
+    label="Terminal · intended project"
+    code={'clink allow "$(pwd -P)" --cli grok'}
+  />
+  <p>
+    Save the following as <code>request.json</code>. Replace the example project
+    path with the output of <code>pwd -P</code>. Give each new attempt a fresh
+    UUID.
+  </p>
+  <Code label="request.json · schema 3" code={generation} />
+  <Code
+    label="Terminal"
+    code="clink generate --request-json - < request.json"
+  />
+  <p>
+    Clink reads one JSON object and writes a terminal result to stdout. Check
+    for exit code 0 and <code>status: "completed"</code>. Validate the request
+    ID and hashes before using the output. A failure is returned to the caller
+    without an automatic retry or agent switch.
+  </p>
+  <h2 id="consult">Consult with Codex</h2>
+  <p>
+    In a connected MCP client, pass this object to the <code>clink</code> tool.
+    Omitting the action selects an advisory consultation. This operation
+    requires the verified Codex build.
+  </p>
+  <Code
+    label="MCP · clink tool arguments"
+    code={JSON.stringify(
+      {
+        cli_name: "codex",
+        prompt:
+          "Review this proposed change and suggest a clearer error message: a missing input currently returns “failed”.",
+      },
+      null,
+      2,
+    )}
+  />
+  <h2 id="task">Start a native task</h2>
+  <p>
+    To ask Claude Code to work in a project inside its configured roots, use the{" "}
+    <code>start</code> action. Native agents use their own tools and permissions
+    and can change files or call external services.
+  </p>
+  <Code label="MCP · clink tool arguments" code={native} />
+  <p>
+    Save the returned <code>task_handle</code>. Replace the placeholder below
+    and pass the object to the same MCP tool to poll its state. See the{" "}
+    <a href="https://github.com/acebytes/clink-cli/blob/main/docs/native-cli-tasks.md">
+      native task guide
+    </a>{" "}
+    for follow-up, cancellation and restart behavior.
+  </p>
+  <Code
+    label="MCP · poll the task"
+    code={JSON.stringify(
+      { action: "status", task_handle: "<returned task_handle>" },
+      null,
+      2,
+    )}
+  />
+</Docs>

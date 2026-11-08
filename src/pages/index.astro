@@ -1,0 +1,68 @@
+---
+import Docs from "../layouts/Docs.astro";
+import Code from "../components/Code.astro";
+---
+
+<Docs
+  title="Introduction"
+  description="Clink connects the CLI agents on your machine to scripts and MCP clients. One Python package installs both entry points."
+  toc={[
+    ["install", "Install Clink"],
+    ["interfaces", "Choose an interface"],
+    ["agents", "Supported agents"],
+  ]}
+>
+  <div class="terminal-figure">
+    <div class="terminal-top">
+      <span class="led" aria-hidden="true"></span> LOCAL EXECUTION
+    </div>
+    <div
+      class="flow-diagram"
+      aria-label="A script or MCP client calls Clink, which invokes a local CLI agent"
+    >
+      <div>
+        <b>Script</b>
+        <i>or MCP client</i>
+      </div>
+      <span aria-hidden="true">→</span>
+      <div class="node">
+        <b>clink</b>
+      </div>
+      <span aria-hidden="true">→</span>
+      <div>
+        <b>CLI agent</b>
+        <i>on your machine</i>
+      </div>
+    </div>
+  </div>
+  <h2 id="install">Install Clink</h2>
+  <Code label="Terminal" code="uv tool install clink-cli" />
+  <p>
+    With <a href="/installation/">both commands installed</a>, you can check
+    capabilities without signing in to a model or sending a prompt.
+  </p>
+  <h2 id="interfaces">Choose an interface</h2>
+  <div class="guide-cards">
+    <a href="/examples/#generate">
+      <code>clink</code>
+      <strong>
+        Call from a script <span>↗</span>
+      </strong>
+      <p>Submit one JSON request and read one terminal result.</p>
+    </a>
+    <a href="/quick-start/#claude">
+      <code>clink-mcp-server</code>
+      <strong>
+        Connect an MCP client <span>↗</span>
+      </strong>
+      <p>Expose 18 tools for consultation, local guidance and native tasks.</p>
+    </a>
+  </div>
+  <h2 id="agents">Supported agents</h2>
+  <p>
+    The verified agent depends on the operation. Codex and Claude Code support
+    generation with explicit models. Grok Build supports its native default.
+    Antigravity has verified native MCP tasks and unverified generation.{" "}
+    <a href="/reference/#admissions">See the full compatibility table.</a>
+  </p>
+</Docs>
