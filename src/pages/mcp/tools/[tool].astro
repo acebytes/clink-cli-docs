@@ -1,0 +1,174 @@
+---
+import Docs from "../../../layouts/Docs.astro";
+import Code from "../../../components/Code.astro";
+import { directory, groups } from "../../../data/tools";
+export function getStaticPaths() {
+  return directory.map((tool) => ({
+    params: { tool: tool.name },
+    props: { tool },
+  }));
+}
+const { tool } = Astro.props;
+const schema = tool.inputSchema;
+const fields = Object.entries(schema.properties ?? {}) as [
+  string,
+  {
+    type?: string | string[];
+    enum?: string[];
+    description?: string;
+    default?: unknown;
+  },
+][];
+const corrections: Record<string, string> = {
+  images:
+    "Absolute paths to supported local images in an approved root. An accepted field alone does not establish image support for the selected operation.",
+  absolute_file_paths:
+    "Absolute paths to explicit, readable regular text files inside an approved root.",
+  relevant_files:
+    "Absolute paths to relevant files. Use approved regular files when passing evidence to an expert.",
+  model:
+    tool.name === "consensus"
+      ? "Deprecated at the top level. Set model on each participant."
+      : "Native CLI model identifier. Advisory selection uses the role and client defaults when omitted or auto.",
+  cli_name: "Configured CLI client name for delegation.",
+  role: "Named role on the selected client. Consultation and native tasks use separate role definitions.",
+  temperature:
+    "Legacy consultation parameter. A supplied value receives an unapplied-parameter warning. Native task actions reject it.",
+  thinking_mode:
+    "Legacy consultation parameter. A supplied value receives an unapplied-parameter warning. Native task actions reject it.",
+  continuation_id:
+    "Server-issued identifier for consultation or workflow replay. Native tasks use a task_handle.",
+  use_assistant_model:
+    tool.group === "local"
+      ? "This local workflow runs without an external expert."
+      : "Set false to skip the external expert. The tool’s own completion rules still apply.",
+  working_directory_absolute_path:
+    "Existing, absolute, approved working directory for this advisory chat request.",
+};
+const toc = [
+  ["use", "How to use it"],
+  ["example", "Example"],
+  ["arguments", "Arguments"],
+  ["schema", "Wire schema"],
+];
+---
+
+<Docs
+  title={tool.name}
+  description={tool.summary}
+  toc={toc}
+  parentHref="/mcp/tools/"
+>
+  <p class="tool-parent">
+    <a href="/mcp/tools/">All MCP tools</a> <span aria-hidden="true">/</span>{" "}
+    {groups[tool.group]}
+  </p>
+  <h2 id="use">How to use it</h2>
+  <p>{tool.use}</p>
+  {tool.group === "workflow" && (
+    <p>
+      Run the investigation in your MCP client. A final step may call an
+      external expert. Set <code>use_assistant_model</code> to{" "}
+      <code>false</code> for a caller-only investigation.{" "}
+      <a href="/mcp/workflows/">Stepping through a workflow</a>.
+    </p>
+  )}
+  <h2 id="example">Example</h2>
+  <Code
+    label={"MCP arguments · " + tool.name}
+    code={JSON.stringify(tool.example, null, 2)}
+  />
+  <p>{tool.next}</p>
+  {tool.name === "clink" && (
+    <p>
+      <a href="/mcp/native-tasks/">
+        Start, follow up, poll or cancel a native task
+      </a>
+      .
+    </p>
+  )}
+  {tool.name === "consensus" && (
+    <p>
+      <a href="/mcp/workflows/#consensus">
+        Choose a consensus mode and handle partial results
+      </a>
+      .
+    </p>
+  )}
+  <h2 id="arguments">Arguments</h2>
+  {fields.length === 0 ? (
+    <p>Pass an empty JSON object.</p>
+  ) : (
+    <dl class="field-list">
+      {fields.map(([name, field]) => (
+        <div>
+          <dt>
+            <code>{name}</code>{" "}
+            <small>
+              {[
+                Array.isArray(field.type) ? field.type.join(" | ") : field.type,
+                (schema.required ?? []).includes(name)
+                  ? "required"
+                  : "optional",
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </small>
+          </dt>
+          <dd>
+            {corrections[name] ??
+              field.description ??
+              "See the wire schema for accepted values."}
+            {field.enum && (
+              <div class="field-extra">
+                Values:{" "}
+                {field.enum.map((v, i) => (
+                  <>
+                    {i > 0 ? ", " : ""}
+                    <code>{v}</code>
+                  </>
+                ))}
+              </div>
+            )}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  )}
+  {["analyze", "codereview", "refactor", "testgen"].includes(tool.name) && (
+    <p>
+      Step 1 requires a nonempty <code>relevant_files</code> array. Replace the
+      sample file with a real absolute path.
+    </p>
+  )}
+  {tool.name === "precommit" && (
+    <p>
+      Step 1 requires <code>path</code> to identify the Git checkout.
+    </p>
+  )}
+  {tool.name === "clink" && (
+    <p>
+      Required fields depend on the action. For example, consult requires a
+      nonblank prompt and status accepts only the action and handle.
+    </p>
+  )}
+  {tool.name === "consensus" && (
+    <p>
+      The first step also requires <code>models</code> with two to eight
+      participants.
+    </p>
+  )}
+  <h2 id="schema">Wire schema</h2>
+  <details class="schema">
+    <summary>Show the full JSON input schema</summary>
+    <Code
+      label={"inputSchema · " + tool.name}
+      code={JSON.stringify(schema, null, 2)}
+    />
+  </details>
+  <p>
+    The snapshot preserves the release’s schema text, including legacy field
+    descriptions. The usage notes above describe runtime restrictions.{" "}
+    <a href="/data/mcp-v0.2.3.json">Download the full release snapshot</a>.
+  </p>
+</Docs>

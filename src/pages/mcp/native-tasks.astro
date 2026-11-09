@@ -1,0 +1,104 @@
+---
+import Docs from "../../layouts/Docs.astro";
+import Code from "../../components/Code.astro";
+const handle = "<returned task_handle>";
+---
+
+<Docs
+  title="Native tasks"
+  description="Delegate work in a specific project, inspect its state, and continue the same private CLI session when supported."
+  toc={[
+    ["start", "Start and poll"],
+    ["followup", "Follow up or cancel"],
+    ["ownership", "Redelivery and ownership"],
+    ["retention", "Retention and limits"],
+  ]}
+>
+  <h2 id="start">Start and poll</h2>
+  <p>
+    Call the MCP tool <code>clink</code> with <code>action: "start"</code>.
+    Choose an admitted native agent and an existing project inside its approved
+    roots. The CLI can use its native tools and integrations. See{" "}
+    <a href="/reference/#admissions">which builds support this operation</a>.
+  </p>
+  <Code
+    label="MCP · clink · start"
+    code={JSON.stringify(
+      {
+        action: "start",
+        cli_name: "claude",
+        project_dir: "/absolute/path/to/your-project",
+        request_key: "parser-tests-start-1",
+        prompt: "Run the existing parser tests and report the failures.",
+        timeout_seconds: 180,
+      },
+      null,
+      2,
+    )}
+  />
+  <p>
+    A start response schedules an attempt. Save its <code>task_handle</code> and
+    poll for a terminal state. A completed response records successful terminal
+    execution. Inspect the output and verify the actual effects in the project.
+  </p>
+  <Code
+    label="MCP · clink · status"
+    code={JSON.stringify({ action: "status", task_handle: handle }, null, 2)}
+  />
+  <h2 id="followup">Follow up or cancel</h2>
+  <p>
+    When <code>followup_available</code> is true, send only the new input with a
+    fresh key. The new attempt keeps the original agent, project, role,
+    instructions and model selection.
+  </p>
+  <Code
+    label="MCP · clink · followup"
+    code={JSON.stringify(
+      {
+        action: "followup",
+        task_handle: handle,
+        request_key: "parser-tests-followup-1",
+        prompt: "Explain the first failure and cite the relevant test.",
+      },
+      null,
+      2,
+    )}
+  />
+  <Code
+    label="MCP · clink · cancel"
+    code={JSON.stringify({ action: "cancel", task_handle: handle }, null, 2)}
+  />
+  <p>
+    Cancellation is idempotent and triggers local cleanup. Earlier filesystem or
+    external changes can persist. A native permission refusal may return{" "}
+    <code>permission_needed</code>. Examine it using the CLI’s normal trust and
+    permission controls.
+  </p>
+  <h2 id="ownership">Redelivery and ownership</h2>
+  <p>
+    Give each intended start or follow-up a unique <code>request_key</code> of
+    1–128 ASCII characters. Start with a letter or digit. The remaining
+    characters may also include <code>_ . : -</code>. If the response is lost,
+    redeliver the same key and identical arguments while the server still holds
+    the task. Changed inputs return <code>request_key_conflict</code>. After a
+    restart, inspect real effects before submitting again.
+  </p>
+  <p>
+    One active native writer can own a canonical project and its overlapping
+    parents or children. This coordination covers tasks in that server process.
+    Work started outside it can still modify the project.
+  </p>
+  <h2 id="retention">Retention and limits</h2>
+  <p>
+    The server retains up to 64 tasks, 16 attempts per task and 8 MiB of task
+    data. Only the latest result is retained, up to 20,000 characters. Inactive
+    terminal records expire after three hours. Polling does not extend
+    retention. Restart discards handles, mappings and deduplication records.
+  </p>
+  <p>
+    By default the pool runs two CLI processes and admits eight waiters. Queue
+    wait is capped at 30 seconds and each attempt at 1,800 seconds including
+    preparation and queueing. Set a shorter <code>timeout_seconds</code> when
+    appropriate.
+  </p>
+</Docs>

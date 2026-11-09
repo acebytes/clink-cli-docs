@@ -1,0 +1,153 @@
+---
+import Docs from "../../layouts/Docs.astro";
+import Code from "../../components/Code.astro";
+import { releaseSource } from "../../data/navigation";
+const buildRequest = [
+  "python3 - <<'PY' > request.json",
+  "import json, uuid",
+  "from pathlib import Path",
+  "",
+  "request = {",
+  '    "schema_version": 3,',
+  '    "execution_mode": "native",',
+  '    "request_id": str(uuid.uuid4()),',
+  '    "project_dir": str(Path.cwd().resolve()),',
+  '    "cli": "codex",',
+  '    "model_selection": {"kind": "explicit", "id": "gpt-6.1-sol"},',
+  '    "instructions": "Rewrite the supplied question for clarity. Return only the revision.",',
+  '    "input": "how exactly is cache invalidation handled here?",',
+  '    "timeout_seconds": 120,',
+  "}",
+  "print(json.dumps(request, ensure_ascii=False))",
+  "PY",
+].join("\n");
+---
+
+<Docs
+  title="Generation requests & results"
+  description="Give one installed agent a bounded text task. Capture the inputs before launch and validate the terminal result before using its output."
+  toc={[
+    ["first", "Send a request"],
+    ["schema", "Choose a schema"],
+    ["result", "Read the terminal result"],
+    ["exit", "Handle failure"],
+  ]}
+>
+  <h2 id="first">Send a request</h2>
+  <p>
+    Start in a trusted project with an admitted, signed-in Codex CLI. Approve
+    the intended folder once. The sample writes <code>request.json</code> and{" "}
+    <code>result.json</code> in the current folder, so use a disposable project
+    when trying it. Generation runs with the native agent’s headless
+    permissions, which may allow file edits and integrations.
+  </p>
+  <Code
+    label="Terminal · approve the current project"
+    code={'clink allow "$(pwd -P)" --cli codex'}
+  />
+  <Code label="Terminal · create request.json" code={buildRequest} />
+  <Code
+    label="Terminal · run one generation attempt"
+    code={
+      'clink generate --request-json - < request.json > result.json\nresult_code=$?\nprintf "Clink exit code: %s\\n" "$result_code"\ncat result.json'
+    }
+  />
+  <h2 id="schema">Choose a schema</h2>
+  <p>
+    Use native <strong>schema 3</strong> for typed selection. Codex and Claude
+    Code require <code>{'{"kind":"explicit","id":"…"}'}</code> with a native
+    model ID. Claude requires a concrete full model name. Grok uses{" "}
+    <code>{'{"kind":"native_default"}'}</code>. Antigravity accepts that
+    selection shape and currently refuses generation. The older native{" "}
+    <strong>schema 2</strong> uses an explicit top-level <code>model</code> for
+    Codex or Claude. Schema 1’s no-tools profile is currently refused.
+  </p>
+  <p>
+    Supply a canonical, existing absolute <code>project_dir</code>,{" "}
+    <code>execution_mode: "native"</code>, a fresh UUID and the exact
+    instruction and input strings. A request can contain up to 64 KiB of
+    instructions and 256 KiB of input, within a 1 MiB raw request limit. Close
+    stdin within ten seconds. <code>timeout_seconds</code> defaults to 120 and
+    accepts 1–1,800 seconds, including intake and queueing.
+  </p>
+  <h2 id="result">Read the terminal result</h2>
+  <dl>
+    <dt>
+      <code>status</code>, <code>output</code>, <code>truncated</code>
+    </dt>
+    <dd>
+      Use the text only after exit 0, a completed status, and a nonblank,
+      untruncated result. Other statuses include failed, incomplete, timed_out
+      and cancelled.
+    </dd>
+    <dt>
+      <code>request_id</code> and three SHA-256 fields
+    </dt>
+    <dd>
+      Match the UUID and the request, instruction and input hashes to your
+      submitted values. The effective request hash excludes the UUID and
+      represents timeout in milliseconds. The{" "}
+      <a href="/extensions/ask-repo/">ask_repo example</a> performs these
+      checks.
+    </dd>
+    <dt>
+      <code>execution</code>
+    </dt>
+    <dd>
+      Inspect the selected CLI, model selection and project. The CLI-reported
+      actual model may be null. Native permissions can produce side effects
+      before failure. Completion confirms final-response transport.
+    </dd>
+    <dt>
+      <code>error</code>, <code>warnings</code>, <code>duration_ms</code>
+    </dt>
+    <dd>
+      Use the public error code and the duration for diagnostics. Keep private
+      prompts and raw sessions out of logs.
+    </dd>
+  </dl>
+  <h2 id="exit">Handle failure</h2>
+  <div
+    class="table-scroll"
+    role="region"
+    aria-label="Generation exit codes"
+    tabindex="0"
+  >
+    <table>
+      <thead>
+        <tr>
+          <th>Exit</th>
+          <th>Meaning</th>
+        </tr>
+      </thead>
+      <tbody>
+        {[
+          [0, "Completed"],
+          [
+            1,
+            "Execution, admission, authentication, parser or transport failure",
+          ],
+          [2, "Invalid invocation, input or request limit"],
+          [3, "Incomplete result"],
+          [124, "Deadline exceeded"],
+          [130, "Cancelled"],
+        ].map(([code, meaning]) => (
+          <tr>
+            <th scope="row">{code}</th>
+            <td>{meaning}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Some early invocation errors only produce command-line diagnostics. Inspect
+    the exit status even if stdout is empty. Clink makes at most one top-level
+    attempt per accepted request. Check possible effects before submitting
+    again. For cross-language encoding and result fields, see the{" "}
+    <a href={releaseSource + "docs/generation-native-protocol.md"}>schema 2</a>{" "}
+    and{" "}
+    <a href={releaseSource + "docs/generation-native-families.md"}>schema 3</a>{" "}
+    contracts.
+  </p>
+</Docs>

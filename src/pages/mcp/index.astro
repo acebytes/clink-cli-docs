@@ -1,0 +1,76 @@
+---
+import Docs from "../../layouts/Docs.astro";
+import Code from "../../components/Code.astro";
+---
+
+<Docs
+  title="Connect an MCP client"
+  description="Let a host such as Claude Code discover Clink tools, read prompt shortcuts, and make a call over a local stdio process."
+  toc={[
+    ["register", "Register the server"],
+    ["discover", "Discover and call tools"],
+    ["prompts", "Prompt shortcuts"],
+  ]}
+>
+  <h2 id="register">Register the server</h2>
+  <p>
+    For Claude Code follow the{" "}
+    <a href="/quick-start/#claude">project-local registration</a>. For a host
+    that accepts a JSON stdio configuration, replace the two absolute paths
+    below. With uv, <code>uv tool dir --bin</code> prints the directory
+    containing the executable.
+  </p>
+  <Code
+    label="MCP client configuration"
+    code={JSON.stringify(
+      {
+        mcpServers: {
+          clink: {
+            command: "/absolute/path/to/clink-mcp-server",
+            args: ["--project", "/absolute/path/to/your-project"],
+          },
+        },
+      },
+      null,
+      2,
+    )}
+  />
+  <p>
+    The client launches the server and owns stdin and stdout. Restart or
+    reconnect the client after configuration changes. Each server process binds
+    one project. See <a href="/configuration/#project">project setup</a> to
+    generate manifests and portable role prompts.
+  </p>
+  <h2 id="discover">Discover and call tools</h2>
+  <p>
+    Use <code>tools/list</code> to get each tool’s name and JSON input schema.
+    Pass the chosen name and arguments to <code>tools/call</code>. The following
+    script uses the MCP Python SDK that ships as a dependency of Clink. Run it
+    with the Python from a Clink installation and put{" "}
+    <code>clink-mcp-server</code> on PATH.
+  </p>
+  <Code
+    label="Python · local discovery"
+    code={
+      'import asyncio\nfrom pathlib import Path\nfrom mcp import ClientSession, StdioServerParameters\nfrom mcp.client.stdio import stdio_client\n\nasync def main():\n    params = StdioServerParameters(\n        command="clink-mcp-server", args=["--project", str(Path.cwd().resolve())]\n    )\n    async with stdio_client(params) as (reader, writer):\n        async with ClientSession(reader, writer) as session:\n            await session.initialize()\n            tools = await session.list_tools()\n            print([tool.name for tool in tools.tools])\n            result = await session.call_tool("version", {})\n            print(result.content[0].text)\n\nasyncio.run(main())'
+    }
+  />
+  <p>
+    Clink normally returns JSON as the text of an MCP content block. Check the
+    inner status and error fields as well as any protocol-level error.{" "}
+    <a href="/mcp/tools/">Browse the 18 tools and their arguments</a>.
+  </p>
+  <h2 id="prompts">Prompt shortcuts</h2>
+  <p>
+    <code>prompts/list</code> advertises a shortcut for each enabled tool and a{" "}
+    <code>continue</code> prompt. <code>prompts/get</code> returns the messages
+    for the selected shortcut. The host decides how to display them. For
+    example, the <code>review</code> prompt guides the host toward{" "}
+    <code>codereview</code>, and <code>thinkdeeper</code> maps to{" "}
+    <code>thinkdeep</code>. Calling a tool directly uses its tool name.
+  </p>
+  <p>
+    The stdio server advertises tools and prompts. Attach file context through
+    tool arguments using approved local paths.
+  </p>
+</Docs>

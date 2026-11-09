@@ -3,12 +3,12 @@ import "@fontsource-variable/geist/wght.css";
 import "@fontsource/ibm-plex-mono/latin-400.css";
 import "../styles/docs.css";
 import { navigation, upstream, docsRepo, release } from "../data/navigation";
-const { title, description, toc = [] } = Astro.props;
+const { title, description, toc = [], parentHref } = Astro.props;
 const here = Astro.url.pathname;
 const entries = navigation.flatMap((group) => group.pages);
 const pos = entries.findIndex((p) => p.href === here);
 const currentGroup = navigation.find((g) =>
-  g.pages.some((p) => p.href === here),
+  g.pages.some((p) => p.href === (parentHref ?? here)),
 );
 ---
 
@@ -19,6 +19,11 @@ const currentGroup = navigation.find((g) =>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>{title} · Clink CLI Docs</title>
     <meta name="description" content={description} />
+    {here === "/404" || here === "/404/" || here === "/404.html" ? (
+      <meta name="robots" content="noindex" />
+    ) : (
+      <link rel="canonical" href={new URL(here, Astro.site)} />
+    )}
     <meta name="theme-color" content="#161918" />
     <link rel="icon" href="/clink.svg" type="image/svg+xml" />
   </head>
@@ -52,7 +57,13 @@ const currentGroup = navigation.find((g) =>
               {group.pages.map((p) => (
                 <a
                   href={p.href}
-                  aria-current={p.href === here ? "page" : undefined}
+                  aria-current={
+                    p.href === here
+                      ? "page"
+                      : p.href === parentHref
+                        ? "location"
+                        : undefined
+                  }
                 >
                   {p.title}
                 </a>
@@ -72,14 +83,20 @@ const currentGroup = navigation.find((g) =>
             {entries.map((p) => (
               <a
                 href={p.href}
-                aria-current={p.href === here ? "page" : undefined}
+                aria-current={
+                  p.href === here
+                    ? "page"
+                    : p.href === parentHref
+                      ? "location"
+                      : undefined
+                }
               >
                 {p.title}
               </a>
             ))}
           </nav>
         </details>
-        <main id="main">
+        <main id="main" tabindex="-1">
           <div class="crumb">
             {currentGroup?.label ?? "Documentation"} <span>/</span> {title}
           </div>
@@ -113,7 +130,10 @@ const currentGroup = navigation.find((g) =>
             ))}
           </nav>
         )}
-        <a class="version" href={upstream + "/blob/main/CHANGELOG.md"}>
+        <a
+          class="version"
+          href={upstream + "/blob/v" + release + "/CHANGELOG.md"}
+        >
           Release {release} ↗
         </a>
       </aside>

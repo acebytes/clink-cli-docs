@@ -1,0 +1,96 @@
+---
+import Docs from "../../layouts/Docs.astro";
+import Code from "../../components/Code.astro";
+---
+
+<Docs
+  title="CLI commands"
+  description="Use clink for discovery, directory approval and one-shot generation. It installs alongside the separate clink-mcp-server command."
+  toc={[
+    ["discover", "Inspect capabilities"],
+    ["allow", "Approve a directory"],
+    ["generate", "Generate"],
+    ["consumer", "Bind application configuration"],
+  ]}
+>
+  <h2 id="discover">Inspect capabilities</h2>
+  <Code label="Terminal" code="clink generation-capabilities --json" />
+  <p>
+    Read the supported schemas and family records without starting an agent or
+    signing in. Each record includes executable names, model selection kinds and
+    verification information. The optional executable check hashes a particular
+    regular file without running it. Supply the agent name and absolute
+    executable path together.
+  </p>
+  <Code
+    label="Terminal · replace the executable path"
+    code="clink generation-capabilities --json --cli codex --executable /absolute/path/to/codex"
+  />
+  <p>
+    Inspect <code>preflight.status</code> for <code>compatible</code>,{" "}
+    <code>missing</code>, <code>invalid_executable</code> or{" "}
+    <code>admission_unverified</code>. Authentication and model entitlement are
+    evaluated during a real request.{" "}
+    <a href="/reference/#admissions">Operation-specific compatibility</a>.
+  </p>
+  <h2 id="allow">Approve a directory</h2>
+  <p>
+    From the intended project, approve a folder for one configured client. Clink
+    resolves its canonical path, asks once and defaults to No. A saved root
+    covers descendants. Selecting a broad root, such as your home, expands what
+    the client can target.
+  </p>
+  <Code
+    label="Terminal · interactive approval"
+    code={'clink allow "$(pwd -P)" --cli codex'}
+  />
+  <p>
+    <code>--yes</code> is explicit consent for scripts. Use <code>--json</code>{" "}
+    to get a machine-readable grant receipt. Inspect <code>status</code>,{" "}
+    <code>grant_saved</code> and <code>error_code</code>. A user declining a
+    terminal prompt can exit cleanly without saving a grant.
+  </p>
+  <Code
+    label="Terminal · explicitly grant the chosen project"
+    code={'clink allow "$(pwd -P)" --cli codex --yes --json'}
+  />
+  <p>
+    Use <code>--project /absolute/bound/project</code> to reproduce an MCP
+    server’s configuration when granting a root. Restart that server to load
+    changes. Release 0.2.3 can offer interactive directory approval during
+    eligible terminal generation and then continue the same request. A headless
+    caller enrolls the directory in advance.
+  </p>
+  <h2 id="generate">Generate</h2>
+  <Code
+    label="Terminal"
+    code="clink generate --request-json - < request.json"
+  />
+  <p>
+    Close stdin after one UTF-8 JSON object. The command returns one terminal
+    result on stdout and writes diagnostics to stderr. Supply instructions and
+    source text in the JSON fields. Use the{" "}
+    <a href="/cli/generation/">request and result guide</a> for a complete
+    invocation and error handling.
+  </p>
+  <h2 id="consumer">Bind application configuration</h2>
+  <Code
+    label="Terminal · app-managed configuration"
+    code={
+      "clink --consumer-config-dir /absolute/canonical/app-config generate --request-json - < request.json"
+    }
+  />
+  <p>
+    An application can bind an existing, canonical configuration directory
+    before reading a generation request. This source is independent of ordinary
+    manifests. Bootstrap an appropriate consumer manifest first, then bind the
+    same directory for <code>allow</code> and <code>generate</code>. The{" "}
+    <code>allow</code> command accepts either this binding or{" "}
+    <code>--project</code>.{" "}
+    <a href="/configuration/#consumer">Consumer manifest example</a>.
+  </p>
+  <p>
+    <code>clink --help</code> and <code>clink COMMAND --help</code> print the
+    installed syntax.
+  </p>
+</Docs>

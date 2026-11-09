@@ -1,0 +1,123 @@
+---
+import Docs from "../../layouts/Docs.astro";
+import Code from "../../components/Code.astro";
+import { releaseSource } from "../../data/navigation";
+---
+
+<Docs
+  title="Roles, tools & adapters"
+  description="Choose the smallest extension for the job. A script can validate a reply, a role can supply reusable guidance, and a server tool can give MCP clients a new operation."
+  toc={[
+    ["function", "Wrap the public CLI"],
+    ["role", "Add a role"],
+    ["tool", "Add an MCP tool"],
+    ["adapter", "Support another agent"],
+  ]}
+>
+  <h2 id="function">Wrap the public CLI</h2>
+  <p>
+    Start with <a href="/extensions/ask-repo/">Build ask_repo</a> if your
+    function turns application data into one question and validates the answer.
+    Submit a schema 3 request on stdin and check the terminal result. Use a
+    companion MCP server when an agent also needs to discover and call the
+    function. The example takes both paths without a fork.
+  </p>
+  <h2 id="role">Add a role</h2>
+  <p>
+    Generate a full project manifest using{" "}
+    <a href="/configuration/#project">project setup</a>. For a Codex advisory
+    role named <code>editor</code>, create{" "}
+    <code>.clink/prompts/editor.txt</code> with the guidance below. Add the
+    displayed property to the existing top-level <code>roles</code> object in{" "}
+    <code>.clink/cli_clients/codex.json</code>, preserving the rest of that full
+    client definition.
+  </p>
+  <Code
+    label="editor.txt"
+    code="Prefer concrete verbs. Preserve the author’s meaning. Explain one editing choice."
+  />
+  <Code
+    label="roles object · property to add"
+    code={JSON.stringify(
+      {
+        editor: {
+          prompt_path: "../prompts/editor.txt",
+          description: "Plain-language editing guidance",
+        },
+      },
+      null,
+      2,
+    )}
+  />
+  <p>
+    Bind the MCP server to the project, reconnect it, and inspect{" "}
+    <code>listmodels</code> for <code>editor</code>. Call the built-in{" "}
+    <code>clink</code> tool with these arguments. Role text supplements the
+    tool’s instructions. The native-task profile has its own{" "}
+    <code>native_task.roles</code> map. Programmatic generation receives{" "}
+    <code>instructions</code> in the request.
+  </p>
+  <Code
+    label="MCP arguments · advisory role"
+    code={JSON.stringify(
+      {
+        action: "consult",
+        cli_name: "codex",
+        role: "editor",
+        prompt:
+          "Simplify this sentence: The service performs a validation of the input.",
+      },
+      null,
+      2,
+    )}
+  />
+  <h2 id="tool">Add an MCP tool</h2>
+  <p>
+    For a site-specific tool, the{" "}
+    <a href="/extensions/ask-repo/#mcp">companion example</a> lets a host
+    discover a new name through its own stdio registration. To change Clink’s
+    built-in catalog, work in the Clink source checkout:
+  </p>
+  <ol>
+    <li>
+      Choose a nearby implementation.{" "}
+      <a href={releaseSource + "tools/challenge.py"}>challenge</a> is local,{" "}
+      <a href={releaseSource + "tools/chat.py"}>chat</a> delegates, and{" "}
+      <a href={releaseSource + "tools/debug.py"}>debug</a> has a caller-driven
+      workflow.
+    </li>
+    <li>
+      Define the Pydantic request, advertised input schema and tool
+      implementation. Validate mandatory action or step fields in the executing
+      path. Use the existing backend for delegation and propagate its errors.
+    </li>
+    <li>
+      Expose the class in{" "}
+      <a href={releaseSource + "tools/__init__.py"}>tools</a> and instantiate it
+      in the <a href={releaseSource + "server.py"}>server’s TOOLS registry</a>.
+      Add a named prompt template there if the tool also needs a prompt
+      shortcut. A new Python prompt file alone registers neither a tool nor a
+      command-line option.
+    </li>
+    <li>
+      Exercise discovery and valid, rejected and disabled calls in an isolated
+      server process. For a workflow, cover successive steps, continuations and
+      external analysis disabled.{" "}
+      <a href="/contributing/#checks">Run the upstream verification suite</a>.
+    </li>
+  </ol>
+  <h2 id="adapter">Support another agent</h2>
+  <p>
+    A new client name can reuse an existing adapter with a complete manifest.
+    Add a CLI family in source when launch flags, transport or output differ.
+    Implement the family’s{" "}
+    <a href={releaseSource + "clink/agents/"}>command adapter</a> and{" "}
+    <a href={releaseSource + "clink/parsers/"}>response parser</a>. Provide
+    fixtures for success, malformed output, errors and cancellation. Verify the
+    real binary and operation-specific safety and lifecycle controls before
+    enabling it. Consultation, native tasks and generation have separate
+    verification and model-selection rules. See the{" "}
+    <a href="/reference/#admissions">current capability table</a> and{" "}
+    <a href={releaseSource + "docs/cli-configuration.md"}>manifest contract</a>.
+  </p>
+</Docs>

@@ -1,0 +1,182 @@
+---
+import Docs from "../layouts/Docs.astro";
+import Code from "../components/Code.astro";
+import { releaseSource } from "../data/navigation";
+---
+
+<Docs
+  title="Configuration"
+  description="Choose where client definitions live, how projects are enrolled, and which settings an operator or application owns."
+  toc={[
+    ["project", "Set up a project"],
+    ["sources", "Manifest precedence"],
+    ["consumer", "App-owned manifests"],
+    ["environment", "Environment and authentication"],
+    ["container", "Containers and migration"],
+  ]}
+>
+  <h2 id="project">Set up a project</h2>
+  <p>
+    Use the Python interpreter where you installed Clink to generate
+    project-local manifests, prompt files and an MCP registration. With a uv
+    tool installation on POSIX, the following looks up that interpreter under
+    the uv tools directory. Replace the project path with an existing checkout.
+  </p>
+  <Code
+    label="Terminal · project setup"
+    code={
+      '"$(uv tool dir)/clink-cli/bin/python" -m clink.setup --project /absolute/path/to/your-project --cli codex --cli claude'
+    }
+  />
+  <p>
+    Omit the repeated <code>--cli</code> flags to generate all bundled clients.
+    Inside the project, <code>.clink/cli_clients/</code> holds definitions and{" "}
+    <code>.clink/prompts/</code> holds their role prompts.{" "}
+    <code>.mcp.json</code> binds the server to the project with machine-specific
+    absolute paths. Setup reports conflicts with existing custom files. After a
+    move, update the registration and reconnect.
+  </p>
+  <p>
+    The source checkout also offers the session-local <code>/clink:setup</code>{" "}
+    Claude Code plugin. Launch Claude Code with{" "}
+    <code>--plugin-dir /absolute/path/to/clink-cli/integrations/claude</code> to
+    enable it.{" "}
+    <a href={releaseSource + "docs/project-setup.md"}>Project setup details</a>.
+  </p>
+  <h2 id="sources">Manifest precedence</h2>
+  <ol>
+    <li>Bundled client definitions</li>
+    <li>
+      Legacy <code>~/.pal/cli_clients/</code>
+    </li>
+    <li>
+      User <code>~/.clink/cli_clients/</code>
+    </li>
+    <li>
+      Explicitly bound project <code>.clink/cli_clients/</code>
+    </li>
+    <li>
+      <code>CLI_CLIENTS_CONFIG_PATH</code>, a JSON file or a directory
+    </li>
+  </ol>
+  <p>
+    A later entry replaces the entire case-insensitive client, including roles.
+    Start with a generated complete manifest. <code>working_dir</code> must fall
+    inside <code>allowed_roots</code>. Relative paths resolve against the
+    manifest. Generated project definitions use <code>../..</code> to refer to
+    their repository. Invalid snapshots stop startup. Restart after edits to
+    manifest or role text.
+  </p>
+  <p>
+    Programmatic generation loads its operator configuration independently of a
+    request’s project path. Give the generation client its own explicit root
+    with <a href="/cli/#allow">clink allow</a>. Native CLI login and project
+    trust remain under the CLI’s control.
+  </p>
+  <h2 id="consumer">App-owned manifests</h2>
+  <p>
+    For a dedicated generation client, create an existing absolute configuration
+    directory and place a family-named JSON file directly inside. Use the actual
+    absolute executable path and canonical absolute roots. The following is a
+    complete consumer manifest for Codex. With an empty list, enroll a directory
+    explicitly before launch.
+  </p>
+  <Code
+    label="codex.json · consumer configuration"
+    code={JSON.stringify(
+      {
+        schema_version: 1,
+        name: "codex",
+        adapter: "codex",
+        command: "/absolute/path/to/codex",
+        allowed_roots: [],
+        generation_native: { inherit_env: [], required_env: [] },
+      },
+      null,
+      2,
+    )}
+  />
+  <Code
+    label="Terminal · grant and generate with the same binding"
+    code={
+      "clink --consumer-config-dir /absolute/canonical/app-config allow /absolute/path/to/your-project --cli codex --yes --json\nclink --consumer-config-dir /absolute/canonical/app-config generate --request-json - < request.json"
+    }
+  />
+  <p>
+    Consumer bindings load only the selected directory. Normal project
+    selection, user manifests and <code>CLI_CLIENTS_CONFIG_PATH</code> do not
+    contribute to that configuration. Use one quoted executable path with no
+    extra arguments. Keep credential values outside the manifest.{" "}
+    <a
+      href={
+        releaseSource +
+        "docs/cli-configuration.md#application-owned-generation-configuration"
+      }
+    >
+      Consumer contract
+    </a>
+    .
+  </p>
+  <h2 id="environment">Environment and authentication</h2>
+  <dl>
+    <dt>
+      <code>CLINK_DEFAULT_CLI</code>
+    </dt>
+    <dd>
+      Default consultation client, normally codex. Native task start requires
+      its own explicit agent selection.
+    </dd>
+    <dt>
+      <code>CLINK_MAX_CONCURRENT</code>, <code>DISABLED_TOOLS</code>
+    </dt>
+    <dd>
+      Control the per-process pool and the comma-separated set of disabled MCP
+      tools. Local version and client discovery stay available.
+    </dd>
+    <dt>
+      <code>CONVERSATION_TIMEOUT_HOURS</code>,{" "}
+      <code>MAX_CONVERSATION_TURNS</code>
+    </dt>
+    <dd>
+      Control in-memory consultation retention. Saving a thread ID alone cannot
+      recover it after restart.
+    </dd>
+    <dt>
+      <code>LOG_LEVEL</code>, <code>LOCALE</code>,{" "}
+      <code>MAX_MCP_OUTPUT_TOKENS</code>
+    </dt>
+    <dd>
+      Configure logging, language guidance and the bounded MCP response budget.
+    </dd>
+  </dl>
+  <p>
+    Sign in through the agent’s own CLI. Native profiles can name specific extra
+    environment variables with <code>inherit_env</code>. Every{" "}
+    <code>required_env</code> name must also be inherited. See the{" "}
+    <a href={releaseSource + ".env.example"}>release environment template</a>{" "}
+    and{" "}
+    <a href={releaseSource + "docs/cli-configuration.md"}>
+      complete manifest guide
+    </a>
+    .
+  </p>
+  <h2 id="container">Containers and migration</h2>
+  <p>
+    The supplied Compose setup runs provider-free discovery and local MCP tools
+    with networking disabled. Build from the release source checkout, then let
+    your MCP host own the attached stdio session.
+  </p>
+  <Code
+    label="Terminal · source checkout"
+    code={
+      "docker compose build clink-mcp\ndocker compose run --rm --no-deps -T clink-mcp"
+    }
+  />
+  <p>
+    The base image contains no logged-in CLI agents. For earlier PAL or wheel
+    installations, check tool paths, full manifest replacement and native model
+    names before moving registrations.{" "}
+    <a href={releaseSource + "docker/README.md"}>Container setup</a> ·{" "}
+    <a href={releaseSource + "docs/migration.md"}>Migration guide</a>.
+  </p>
+</Docs>

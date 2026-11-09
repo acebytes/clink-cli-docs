@@ -1,0 +1,38 @@
+---
+import Docs from "../../../layouts/Docs.astro";
+import { directory, groups } from "../../../data/tools";
+const sections = Object.entries(groups);
+---
+
+<Docs
+  title="MCP tool directory"
+  description="Find the right tool by task. Each entry includes an example, its arguments, and the exact input schema advertised by Clink 0.2.3."
+  toc={sections}
+>
+  <p>
+    Call these names through a connected MCP client. An MCP host may display a
+    server prefix. For terminal generation, use the{" "}
+    <a href="/cli/">CLI commands</a>.
+  </p>
+  {sections.map(([group, label]) => (
+    <section>
+      <h2 id={group}>{label}</h2>
+      <div class="tool-grid">
+        {directory
+          .filter((t) => t.group === group)
+          .map((t) => (
+            <a href={"/mcp/tools/" + t.name + "/"}>
+              <code>{t.name}</code>
+              <p>{t.summary}</p>
+            </a>
+          ))}
+      </div>
+    </section>
+  ))}
+  <p>
+    <a href="/data/mcp-v0.2.3.json">
+      Download the tools and prompts snapshot (JSON)
+    </a>
+    . Use <code>tools/list</code> to inspect your own server’s enabled set.
+  </p>
+</Docs>

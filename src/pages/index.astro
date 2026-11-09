@@ -10,6 +10,7 @@ import Code from "../components/Code.astro";
     ["install", "Install Clink"],
     ["interfaces", "Choose an interface"],
     ["agents", "Supported agents"],
+    ["extend", "Build a repository helper"],
   ]}
 >
   <div class="terminal-figure">
@@ -43,14 +44,14 @@ import Code from "../components/Code.astro";
   </p>
   <h2 id="interfaces">Choose an interface</h2>
   <div class="guide-cards">
-    <a href="/examples/#generate">
+    <a href="/cli/">
       <code>clink</code>
       <strong>
         Call from a script <span>↗</span>
       </strong>
       <p>Submit one JSON request and read one terminal result.</p>
     </a>
-    <a href="/quick-start/#claude">
+    <a href="/mcp/">
       <code>clink-mcp-server</code>
       <strong>
         Connect an MCP client <span>↗</span>
@@ -64,5 +65,11 @@ import Code from "../components/Code.astro";
     generation with explicit models. Grok Build supports its native default.
     Antigravity has verified native MCP tasks and unverified generation.{" "}
     <a href="/reference/#admissions">See the full compatibility table.</a>
+  </p>
+  <h2 id="extend">Build a repository helper</h2>
+  <p>
+    Give your agent a question and a few lines from a Git commit. The{" "}
+    <a href="/extensions/ask-repo/">ask_repo tutorial</a> shows how to verify
+    each quote and make the same function available to an MCP client.
   </p>
 </Docs>

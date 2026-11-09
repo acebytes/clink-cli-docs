@@ -1,0 +1,93 @@
+---
+import Docs from "../layouts/Docs.astro";
+import { releaseSource } from "../data/navigation";
+---
+
+<Docs
+  title="Troubleshooting"
+  description="Use the operation and error code to decide what to check before sending another request."
+  toc={[
+    ["startup", "Startup or discovery"],
+    ["execution", "Refused execution"],
+    ["result", "An incomplete answer or lost task"],
+  ]}
+>
+  <h2 id="startup">Startup or discovery</h2>
+  <dl>
+    <dt>The shell cannot find a command</dt>
+    <dd>
+      Run <code>uv tool list</code> and <code>uv tool dir --bin</code>. Use the
+      executable’s absolute path in a GUI host. Follow uv’s PATH instructions
+      for a new shell.
+    </dd>
+    <dt>Claude Code shows the wrong registration</dt>
+    <dd>
+      Open it in the registered project, run <code>claude mcp get clink</code>{" "}
+      and inspect <code>/mcp</code>. Verify the executable, project path, and
+      local versus project registration. Reconnect and call <code>version</code>
+      .
+    </dd>
+    <dt>A manifest fails validation</dt>
+    <dd>
+      Check JSON, schema version, complete replacements, executable paths, role
+      prompt paths and roots in{" "}
+      <a href="/configuration/">configuration precedence</a>. Existing project
+      definitions can shadow user definitions.
+    </dd>
+  </dl>
+  <h2 id="execution">Refused execution</h2>
+  <dl>
+    <dt>
+      <code>path_not_allowed</code>
+    </dt>
+    <dd>
+      Check the canonical directory exists, select the intended CLI and approve
+      its folder with <code>clink allow</code>. For project-bound MCP, reproduce
+      the binding with <code>--project</code> and restart the server. Generation
+      uses its independent binding.
+    </dd>
+    <dt>
+      <code>policy_unverified</code> or unsupported capability
+    </dt>
+    <dd>
+      Compare the exact agent, binary and operation with the{" "}
+      <a href="/reference/#admissions">admission table</a>. Installation,
+      successful login and native-task availability are independent of
+      consultation or generation admission. An agent upgrade can invalidate a
+      previously admitted build.
+    </dd>
+    <dt>Agent undiscoverable, unauthenticated or rate-limited</dt>
+    <dd>
+      Check the executable seen by the host. For generation, inspect{" "}
+      <code>generation-capabilities</code> with an explicit path. Then check the
+      native login, requested model and account limits. Discovery itself never
+      checks login.
+    </dd>
+    <dt>
+      <code>permission_needed</code>
+    </dt>
+    <dd>
+      Review the project and the native CLI’s headless permission controls. A
+      folder grant only approves Clink’s selection of the project.
+    </dd>
+  </dl>
+  <h2 id="result">An incomplete answer or lost task</h2>
+  <p>
+    For generation, read the exit code, terminal status and{" "}
+    <code>side_effects_possible</code>. Save diagnostic codes before retrying.
+    For a native task, poll the original handle while the server is running. A
+    retained identical request key can recover the original attempt. After
+    restart, inspect actual changes or external actions before resubmission.
+  </p>
+  <p>
+    For a workflow conflict, verify the step number, continuation ID and
+    original inputs. After expiry, begin a fresh investigation with your saved
+    evidence. Report the operation, versions and a minimal synthetic
+    reproduction through the{" "}
+    <a href="/contributing/#report">issue or security reporting guidance</a>.{" "}
+    <a href={releaseSource + "docs/release-evidence.md"}>
+      Release verification scope
+    </a>
+    .
+  </p>
+</Docs>

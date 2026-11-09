@@ -94,10 +94,8 @@ const native = JSON.stringify(
   <p>
     Save the returned <code>task_handle</code>. Replace the placeholder below
     and pass the object to the same MCP tool to poll its state. See the{" "}
-    <a href="https://github.com/acebytes/clink-cli/blob/main/docs/native-cli-tasks.md">
-      native task guide
-    </a>{" "}
-    for follow-up, cancellation and restart behavior.
+    <a href="/mcp/native-tasks/">native task guide</a> for follow-up,
+    cancellation and restart behavior.
   </p>
   <Code
     label="MCP · poll the task"
@@ -107,4 +105,10 @@ const native = JSON.stringify(
       2,
     )}
   />
+  <h2 id="repository">Ask a repository</h2>
+  <p>
+    Wrap one generation attempt in a function that checks the file references in
+    the answer.{" "}
+    <a href="/extensions/ask-repo/">Try the downloadable ask_repo example</a>.
+  </p>
 </Docs>

@@ -1,0 +1,111 @@
+---
+import Docs from "../../layouts/Docs.astro";
+import Code from "../../components/Code.astro";
+---
+
+<Docs
+  title="Workflows & context"
+  description="Carry evidence through a caller-driven investigation, ask for a final expert opinion, or compare independent participants."
+  toc={[
+    ["steps", "Run an investigation"],
+    ["replay", "Continue a conversation"],
+    ["context", "Attach evidence"],
+    ["consensus", "Consult several participants"],
+  ]}
+>
+  <h2 id="steps">Run an investigation</h2>
+  <p>
+    Choose a <a href="/mcp/tools/#workflow">guided investigation</a>. Send a
+    step and the findings you already have. Investigate in your own client
+    between calls. The last step may invoke an advisory expert according to that
+    tool’s validation and confidence settings. Set{" "}
+    <code>use_assistant_model: false</code> on each step to keep investigation
+    with the caller.
+  </p>
+  <Code
+    label="MCP · debug · first step"
+    code={JSON.stringify(
+      {
+        step: "Reproduce the parser error with an empty record.",
+        step_number: 1,
+        total_steps: 2,
+        next_step_required: true,
+        findings: "A record with zero fields fails.",
+        use_assistant_model: false,
+      },
+      null,
+      2,
+    )}
+  />
+  <p>
+    Use the returned continuation ID, increment the step number, and supply the
+    new evidence. Substitute the real ID in this example.
+  </p>
+  <Code
+    label="MCP · debug · final step"
+    code={JSON.stringify(
+      {
+        step: "Check whether a missing field reaches the parser.",
+        step_number: 2,
+        total_steps: 2,
+        next_step_required: false,
+        findings: "The fixture reproduced an unguarded first-field read.",
+        continuation_id: "<returned continuation ID>",
+        use_assistant_model: false,
+      },
+      null,
+      2,
+    )}
+  />
+  <p>
+    <a href="/mcp/tools/planner/">planner</a>,{" "}
+    <a href="/mcp/tools/docgen/">docgen</a> and{" "}
+    <a href="/mcp/tools/tracer/">tracer</a> have self-contained workflows. They
+    guide the host through planning, documentation and tracing.
+  </p>
+  <h2 id="replay">Continue a conversation</h2>
+  <p>
+    Capture the server-issued <code>continuation_id</code> and pass it to a
+    compatible subsequent tool. The server replays bounded context and
+    serializes updates for the ID. Defaults are three hours of inactivity, 50
+    individual messages and 128 KiB of replay. A response can report pruned
+    history. After expiry or restart, start a new conversation with a summary of
+    the evidence you need.
+  </p>
+  <p>
+    A repeated workflow transition with the same inputs can return its cached
+    result. Changing an already-recorded transition can return{" "}
+    <code>workflow_conflict</code>. Native CLI sessions use{" "}
+    <a href="/mcp/native-tasks/">task handles</a>.
+  </p>
+  <h2 id="context">Attach evidence</h2>
+  <p>
+    Use absolute paths under the chosen client’s approved roots. Select
+    individual regular text files. Tools use <code>absolute_file_paths</code> or{" "}
+    <code>relevant_files</code> as shown in their schemas. The verified Codex
+    consultation profile accepts explicit local PNG, JPEG, GIF and WebP image
+    paths. Put the image paths in <code>images</code>. Native tasks reject image
+    input.
+  </p>
+  <p>
+    Clink checks up to 256 declared files and images and 64 MiB of source
+    context. Assembled inline prompts are bounded at 1 MiB. Supply a narrower
+    excerpt when required evidence is too large. A declared{" "}
+    <code>prompt.txt</code> can provide the primary prompt for supported simple
+    tools and counts toward the bounds.
+  </p>
+  <h2 id="consensus">Consult several participants</h2>
+  <p>
+    Start with two to eight entries in <code>models</code>. Choose participants
+    by client, role, model and stance. Participants receive independent inputs
+    and the caller owns synthesis. The default sequential mode advances through
+    caller steps. Set <code>execution_mode: "parallel"</code> to gather outcomes
+    in input order under the shared process limit.
+  </p>
+  <p>
+    Check every result and retain any individual errors. Clink compares a
+    bounded manifest of declared files around consultation. Changed files
+    invalidate comparison. This check does not freeze a working tree.{" "}
+    <a href="/mcp/tools/consensus/#example">Copy a two-participant example</a>.
+  </p>
+</Docs>

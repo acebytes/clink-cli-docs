@@ -1,0 +1,163 @@
+---
+import Docs from "../../layouts/Docs.astro";
+import Code from "../../components/Code.astro";
+const download = "curl -fLO https://clinkcli.org/examples/ask_repo.py";
+const fixture = [
+  "git init demo-library",
+  "printf '%s\\n' '# Demo library' 'Saved prompts are stored in SQLite.' > demo-library/README.md",
+  "git -C demo-library add README.md",
+  'git -C demo-library -c user.name=Demo -c user.email=demo@example.invalid -c commit.gpgsign=false commit -m "Add storage note"',
+].join("\n");
+const question = '"Where are saved prompts stored?"';
+const args = "--repo demo-library --file README.md --first-line 1 --count 2";
+const register = [
+  "curl -fLO https://clinkcli.org/examples/repo_server.py",
+  "uv venv --python 3.12 .venv",
+  "uv pip install --python .venv/bin/python clink-cli==0.2.3",
+  "claude mcp add --scope local --transport stdio repo-questions -- \\",
+  '  "$PWD/.venv/bin/python" "$PWD/repo_server.py" \\',
+  '  --repo "$PWD/demo-library" --file README.md --first-line 1 --count 2',
+  "claude mcp get repo-questions",
+].join("\n");
+---
+
+<Docs
+  title="Build ask_repo"
+  description="Give a script or an MCP client a repository question it can answer with checkable file references. Start with one committed file and one question."
+  toc={[
+    ["try", "Preview a packet"],
+    ["ask", "Ask the agent"],
+    ["verify", "Check the citations"],
+    ["mcp", "Expose it as an MCP tool"],
+    ["adapt", "Adapt the example"],
+  ]}
+>
+  <p>
+    <code>ask_repo</code> is a downloadable example built on{" "}
+    <code>clink generate</code>. Its inputs are a local Git checkout, a tracked
+    text file, a line range and a question. Each citation identifies the commit,
+    file, line number and exact quote.
+  </p>
+  <h2 id="try">Preview a packet</h2>
+  <p>
+    You need Git and Python 3.10 or later to preview the evidence. Start in a
+    new, empty working folder. Download the helper and create a two-line
+    repository you can safely experiment with.
+  </p>
+  <Code label="Terminal · download the helper" code={download} />
+  <Code label="Terminal · create the example repository" code={fixture} />
+  <Code
+    label="Terminal · local preview, no agent call"
+    code={"python3 ask_repo.py --show-packet " + args + " " + question}
+  />
+  <p>
+    The packet shows the commit and the two lines from <code>README.md</code>.
+    Edit the file without committing and preview again. The packet still shows
+    the original lines at <code>HEAD</code>.
+  </p>
+  <h2 id="ask">Ask the agent</h2>
+  <p>
+    Install Clink, then check your installed Codex executable against the{" "}
+    <a href="/reference/#admissions">supported generation profile</a>. Sign in
+    through Codex. This example requests <code>gpt-6.1-sol</code> explicitly.
+    Approve only the demo folder and run the same question without the preview
+    flag.
+  </p>
+  <Code
+    label="Terminal · one native generation attempt"
+    code={
+      'uv tool install clink-cli\nclink generation-capabilities --json --cli codex --executable "$(command -v codex)"\nclink allow "$(cd demo-library && pwd -P)" --cli codex\npython3 ask_repo.py ' +
+      args +
+      " " +
+      question
+    }
+  />
+  <p>
+    Use a trusted repository and prompt. Native generation runs in the selected
+    checkout with the agent’s own configured tools and permissions. It can read
+    more than the packet, change files or contact integrations. The instructions
+    ask it to use the supplied evidence. Enforcing exclusive access to a packet
+    requires separate isolation.
+  </p>
+  <h2 id="verify">Check the citations</h2>
+  <p>
+    A successful answer for the sample might say “Saved prompts are stored in
+    SQLite.” Its citation must contain the actual commit and quote line 2
+    exactly. The following is illustrative. Your checkout supplies its own
+    commit ID.
+  </p>
+  <Code
+    label="Example result · abbreviated for display"
+    code={JSON.stringify(
+      {
+        answer: "Saved prompts are stored in SQLite.",
+        citations: [
+          {
+            revision: "<commit from your checkout>",
+            path: "README.md",
+            line: 2,
+            quote: "Saved prompts are stored in SQLite.",
+          },
+        ],
+      },
+      null,
+      2,
+    )}
+  />
+  <p>
+    The helper checks completion, request identity, hashes and execution
+    settings. It rejects invented line numbers, duplicate citations, mismatched
+    quotations and truncated results. When the evidence is insufficient, the
+    agent can return <code>{'{"answer":null,"citations":[]}'}</code>. A matching
+    quote proves the cited text exists. Read it to judge whether it supports the
+    answer.
+  </p>
+  <h2 id="mcp">Expose it as an MCP tool</h2>
+  <p>
+    Save{" "}
+    <a href="/examples/ask_repo.py" download>
+      ask_repo.py
+    </a>{" "}
+    and{" "}
+    <a href="/examples/repo_server.py" download>
+      repo_server.py
+    </a>{" "}
+    together. From the same working folder, create an environment with the
+    pinned Clink release and register the example server. The registered command
+    fixes the repository, file, range and Python environment. The calling agent
+    supplies only the question.
+  </p>
+  <Code
+    label="Terminal · register the companion with Claude Code"
+    code={register}
+  />
+  <p>
+    Open Claude Code in the directory where you registered the server. Ask it to
+    call <code>ask_repo</code> on <code>repo-questions</code> with the arguments
+    below. This server runs alongside Clink’s built-in MCP server, with its own
+    registration and one tool.
+  </p>
+  <Code
+    label="MCP arguments · custom ask_repo"
+    code={JSON.stringify(
+      { question: "Where are saved prompts stored?" },
+      null,
+      2,
+    )}
+  />
+  <h2 id="adapt">Adapt the example</h2>
+  <p>
+    Point the helper at a different tracked UTF-8 file or adjust the line range.
+    It accepts a file up to 64 KiB, at most 48 lines and a question up to 4,096
+    bytes. It resolves one commit before reading any evidence. Paths, revision
+    and quotes in the final citations come from that captured packet. A failed
+    attempt returns an error to the caller and can have native side effects.
+  </p>
+  <p>
+    The original repository pilot used an approved evidence manifest, separately
+    configured requester and responder, and an additional response gate. This
+    local example extracts its citation pattern. It makes one native call on
+    your machine. You can also{" "}
+    <a href="/extensions/">add a role or develop a built-in tool</a>.
+  </p>
+</Docs>

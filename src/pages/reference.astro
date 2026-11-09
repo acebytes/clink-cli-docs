@@ -1,6 +1,6 @@
 ---
 import Docs from "../layouts/Docs.astro";
-import { upstream } from "../data/navigation";
+import { releaseSource } from "../data/navigation";
 const agents = [
   ["Codex 0.166.0", "Admitted", "Disabled", "Explicit model, schema 2 or 3"],
   [
@@ -56,12 +56,16 @@ const agents = [
     </dt>
     <dd>Serve MCP tools over stdio for an explicitly bound workspace.</dd>
   </dl>
+  <p>
+    <a href="/cli/">All CLI commands and flags</a> ·{" "}
+    <a href="/cli/generation/">Request and result fields</a>
+  </p>
   <h2 id="admissions">Agent compatibility</h2>
   <p>
     The recorded checks cover exact macOS arm64 binaries, launch recipes and
     parsers. A different build can be installed and signed in while still being
     refused.{" "}
-    <a href={upstream + "/blob/main/docs/release-evidence.md"}>
+    <a href={releaseSource + "docs/release-evidence.md"}>
       Release evidence and limits
     </a>
     .
@@ -123,6 +127,9 @@ const agents = [
       <code>version</code>.
     </li>
   </ul>
+  <p>
+    <a href="/mcp/tools/">Browse all 18 tools, with arguments and examples</a>.
+  </p>
   <h2 id="config">Configuration</h2>
   <p>
     Clink loads client manifests in the order below. A later definition replaces
@@ -146,14 +153,15 @@ const agents = [
   <p>
     Generation loads operator configuration independently of the request’s
     project path. See{" "}
-    <a href={upstream + "/blob/main/docs/cli-configuration.md"}>
-      CLI configuration
-    </a>{" "}
+    <a href={releaseSource + "docs/cli-configuration.md"}>CLI configuration</a>{" "}
     and{" "}
-    <a href={upstream + "/blob/main/docs/generation-native-setup.md"}>
+    <a href={releaseSource + "docs/generation-native-setup.md"}>
       generation setup
     </a>
     .
+  </p>
+  <p>
+    <a href="/configuration/">Project, user and app-owned configuration</a>.
   </p>
   <h2 id="results">Results and permissions</h2>
   <p>
@@ -165,14 +173,14 @@ const agents = [
   </p>
   <p>
     Read the{" "}
-    <a href={upstream + "/blob/main/docs/generation-native-protocol.md"}>
+    <a href={releaseSource + "docs/generation-native-protocol.md"}>
       schema 2 contract
     </a>
     ,{" "}
-    <a href={upstream + "/blob/main/docs/generation-native-families.md"}>
+    <a href={releaseSource + "docs/generation-native-families.md"}>
       schema 3 contract
     </a>{" "}
-    and <a href={upstream + "/blob/main/SECURITY.md"}>security policy</a> for
-    full details.
+    and <a href={releaseSource + "SECURITY.md"}>security policy</a> for full
+    details.
   </p>
 </Docs>

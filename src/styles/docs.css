@@ -391,6 +391,70 @@ pre:focus-visible {
   line-height: 1.5;
   color: var(--muted);
 }
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 215px), 1fr));
+  gap: 10px;
+  margin: 14px 0 22px;
+}
+.tool-grid a {
+  display: block;
+  padding: 15px;
+  color: var(--mint);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  text-decoration: none;
+}
+.tool-grid a:hover {
+  border-color: var(--mint);
+}
+.tool-grid p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+  margin-top: 6px;
+}
+.tool-parent,
+.field-list small,
+.field-extra {
+  font-size: 13px;
+  color: var(--muted);
+}
+.tool-parent span {
+  margin-inline: 4px;
+}
+.field-list > div {
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+}
+.field-list small {
+  margin-left: 5px;
+  font-family: var(--mono);
+}
+.field-list dd {
+  overflow-wrap: anywhere;
+  margin-bottom: 0;
+}
+.field-extra {
+  margin-top: 5px;
+}
+.schema {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  margin: 15px 0;
+}
+.schema summary {
+  cursor: pointer;
+  color: var(--mint);
+}
+.schema .code-card {
+  margin-bottom: 0;
+}
+.crumb {
+  flex-wrap: wrap;
+}
 .right {
   padding: 46px clamp(12px, 1.6vw, 27px) 25px 0;
 }
